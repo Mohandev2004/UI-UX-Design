@@ -1,37 +1,43 @@
-"use client";
+"use client"
 
-import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { SignInButton, UserButton, useUser } from "@clerk/nextjs";
+import Image from "next/image"
+import { Button } from "@/components/ui/button"
+import { SignInButton, UserButton, useUser } from "@clerk/nextjs"
 
 function Header() {
-  const { user } = useUser();
+  const { user } = useUser()
 
   return (
-    <div className="flex items-center justify-between p-4">
-      <div className="flex gap-2 items-center">
-        <Image src="/logo.png" alt="logo" width={40} height={40} />
+    <header className="flex items-center border-b border-border px-6 py-4 ">
+      <div className="flex items-center gap-2 flex-1">
+        <Image
+          src="/Logo.png"
+          alt="logo"
+          width={35}
+          height={35}
+          className="rounded-full"
+        />
         <h2 className="text-xl font-semibold">
-          <span className="text-primary">UIUX</span> MOCK
+          <span className="text-primary">UIUX</span> Design
         </h2>
       </div>
 
-      <ul className="flex gap-5 items-center text-lg">
+      <ul className="flex gap-6 items-center text-lg">
         <li className="hover:text-primary cursor-pointer">Home</li>
         <li className="hover:text-primary cursor-pointer">Pricing</li>
       </ul>
-      <div className="z-10">
+
+      <div className="flex-1 flex justify-end">
         {!user ? (
           <SignInButton mode="modal">
-            <Button className="z-10 cursor-pointer">Get Started</Button>
+            <Button>Get Started</Button>
           </SignInButton>
         ) : (
           <UserButton />
         )}
       </div>
-
-    </div>
-  );
+    </header>
+  )
 }
 
-export default Header;
+export default Header

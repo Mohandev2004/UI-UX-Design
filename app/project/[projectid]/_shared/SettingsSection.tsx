@@ -1,0 +1,117 @@
+"use client"
+
+import React, { useState } from "react"
+import { THEME_NAME_LIST, THEMES } from "@/app/data/Themes"
+import type { ThemeKey } from "@/app/data/Themes"
+
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+
+import { Camera, Share, Sparkles } from "lucide-react"
+
+function SettingsSection() {
+  const [selectedTheme, setSelectedTheme] = useState<ThemeKey>("AURORA_INK")
+  const [projectName, setProjectName] = useState("")
+  const [userNewScreenInput, setUserNewScreenInput] = useState("")
+
+  return (
+    <div className="w-[300px] h-[90vh] p-5 flex flex-col gap-5">
+      {/* Header */}
+      <h2 className="font-medium text-lg">Settings</h2>
+
+      {/* Project Name */}
+      <div>
+        <h2 className="text-sm mb-1">Project Name</h2>
+        <Input
+          placeholder="Project Name"
+          value={projectName}
+          onChange={(e) => setProjectName(e.target.value)}
+        />
+      </div>
+
+      {/* Generate Screen */}
+      <div>
+        <h2 className="text-sm mb-1">Generate New Screen</h2>
+        <Textarea
+          placeholder="Enter prompt to generate screen using AI"
+          value={userNewScreenInput}
+          onChange={(e) => setUserNewScreenInput(e.target.value)}
+          className="min-h-24"
+        />
+        <Button size="sm" className="mt-2 w-full gap-2">
+          <Sparkles size={16} />
+          Generate With AI
+        </Button>
+      </div>
+
+      {/* Themes */}
+      <div className="flex-1">
+        <h2 className="text-sm mb-1">Themes</h2>
+
+        <div className="h-[200px] overflow-auto scrollbar-hide pr-1">
+          {THEME_NAME_LIST.map((theme) => (
+            <div
+              key={theme}
+              onClick={() => setSelectedTheme(theme)}
+              className={`p-2 mb-2 rounded-xl border cursor-pointer transition-all
+                ${
+                  theme === selectedTheme
+                    ? "border-primary bg-primary/20"
+                    : "hover:bg-muted"
+                }`}
+            >
+              <h3 className="text-sm font-medium">{theme}</h3>
+
+              {/* Theme Colors */}
+              <div className="flex gap-2 mt-2">
+                {[
+                  THEMES[theme].primary,
+                  THEMES[theme].secondary,
+                  THEMES[theme].accent,
+                  THEMES[theme].background,
+                ].map((color, index) => (
+                  <div
+                    key={index}
+                    className="h-4 w-4 rounded-full border"
+                    style={{ backgroundColor: color }}
+                  />
+                ))}
+
+                {/* Gradient Preview */}
+                <div
+                  className="h-4 w-4 rounded-full border"
+                  style={{
+                    background: `linear-gradient(
+                      135deg,
+                      ${THEMES[theme].background},
+                      ${THEMES[theme].primary},
+                      ${THEMES[theme].accent}
+                    )`,
+                  }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Extras */}
+      <div>
+        <h2 className="text-sm mb-1">Extras</h2>
+        <div className="flex gap-3">
+          <Button size="sm" variant="outline" className="gap-2">
+            <Camera size={16} />
+            Screenshot
+          </Button>
+          <Button size="sm" variant="outline" className="gap-2">
+            <Share size={16} />
+            Share
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default SettingsSection

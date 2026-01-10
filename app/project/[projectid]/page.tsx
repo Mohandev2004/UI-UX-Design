@@ -1,10 +1,19 @@
+import { BackgroundRippleEffect } from '@/components/ui/background-ripple-effect'
 import React from 'react'
+import ProjectHeader from './_shared/ProjectHeader'
+import SettingsSection from './_shared/SettingsSection'
 
 function ProjectCanvasPlayground
 () {
   return (
-    <div>ProjectCanvasPlayground
-        
+    <div>
+        <ProjectHeader />
+        <div>
+          {/* Settings */}
+          <SettingsSection />
+
+          {/* Canvas */}
+        </div>
     </div>
   )
 }

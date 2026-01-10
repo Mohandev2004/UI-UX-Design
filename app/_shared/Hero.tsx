@@ -80,9 +80,9 @@ export default function Hero() {
           </div>
 
           <div className="w-full max-w-6xl">
-            <h2 className="text-5xl font-bold leading-tight md:text-6xl">
-              Design High Quality Website and
-              <span className="block">Mobile App Designs</span>
+            <h2 className="text-5xl font-bold leading-tight md:text-5xl">
+              Design High Quality <span className="text-blue-100">Website and </span> 
+              <span className="block"><span className="text-blue-100">Mobile App </span>Designs</span>
             </h2>
 
             <p className="mx-auto mt-4 max-w-3xl text-muted-foreground">
@@ -121,7 +121,7 @@ export default function Hero() {
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className="p-3 border rounded-2xl flex flex-col items-center bg-white dark:bg-neutral-800 z-10 max-w-[140px] text-center cursor-pointer"
+                className="p-2.5 border rounded-2xl flex flex-col items-center bg-white dark:bg-neutral-800 z-10 max-w-[140px] text-center cursor-pointer"
                 onClick={() => setUserInput(suggestion?.description)}
               >
                 <span className="text-lg">{suggestion?.icon}</span>
