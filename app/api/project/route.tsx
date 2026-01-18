@@ -16,15 +16,9 @@ export async function POST(req: NextRequest) {
 
     await connectDB();
 
-    let body;
-    try {
-      body = await req.json();
-    } catch {
-      return NextResponse.json(
-        { error: "Invalid or empty JSON body" },
-        { status: 400 }
-      );
-    }
+    const body = await req.json();
+    console.log("POST body:", body);
+    console.log("User ID:", userId);
 
     const { userInput, device, projectId } = body;
 
@@ -35,6 +29,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // ✅ Create the project in DB
     const project = await Project.create({
       projectId,
       userInput,
@@ -42,12 +37,13 @@ export async function POST(req: NextRequest) {
       userId,
     });
 
-    // ⚠️ You were returning ONLY projectId before
+    console.log("Project created:", project);
+
     return NextResponse.json(project, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to create project:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
@@ -59,7 +55,6 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -68,17 +63,13 @@ export async function GET(req: NextRequest) {
 
     const projectId = req.nextUrl.searchParams.get("projectId");
 
-    if (!projectId) {
-      return NextResponse.json(
-        { error: "projectId is required" },
-        { status: 400 }
-      );
+    if (!projectId || projectId === "undefined") {
+      return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
     }
 
-    const project = await Project.findOne({
-      projectId,
-      userId,
-    });
+    console.log("Fetching project:", { projectId, userId });
+
+    const project = await Project.findOne({ projectId, userId });
 
     if (!project) {
       return NextResponse.json(
@@ -88,10 +79,10 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(project, { status: 200 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Failed to fetch project:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error.message || "Internal Server Error" },
       { status: 500 }
     );
   }
