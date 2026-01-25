@@ -1,9 +1,8 @@
 export type ProjectType = {
-    id:number;
-    projectId:String;
-    device:String;
-    userInput:String;
-    projectName?:String;
-    theam?:string;
-
+  id: number;
+  projectId: string;
+  device: string;
+  userInput: string;
+  projectName?: string;
+  theme?: string; // corrected spelling and type
 }

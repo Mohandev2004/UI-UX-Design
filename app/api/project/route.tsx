@@ -1,56 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { connectDB } from "@/lib/db";
-import { Project } from "@/models/schema";
+import { db } from "@/config/db";
+import { projectsTable } from "@/config/schema";
+import { eq, and } from "drizzle-orm";
 import { auth } from "@clerk/nextjs/server";
 
 /* =======================
-   CREATE PROJECT (POST)
-======================= */
-export async function POST(req: NextRequest) {
-  try {
-    const { userId } = await auth();
-
-    if (!userId) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    await connectDB();
-
-    const body = await req.json();
-    console.log("POST body:", body);
-    console.log("User ID:", userId);
-
-    const { userInput, device, projectId } = body;
-
-    if (!userInput || !device || !projectId) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 }
-      );
-    }
-
-    // ✅ Create the project in DB
-    const project = await Project.create({
-      projectId,
-      userInput,
-      device,
-      userId,
-    });
-
-    console.log("Project created:", project);
-
-    return NextResponse.json(project, { status: 201 });
-  } catch (error: any) {
-    console.error("Failed to create project:", error);
-    return NextResponse.json(
-      { error: error.message || "Internal Server Error" },
-      { status: 500 }
-    );
-  }
-}
-
-/* =======================
-   GET PROJECT (GET)
+   GET PROJECT (QUERY PARAM)
+   /api/project?projectId=xxx
 ======================= */
 export async function GET(req: NextRequest) {
   try {
@@ -59,17 +15,24 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await connectDB();
-
     const projectId = req.nextUrl.searchParams.get("projectId");
 
-    if (!projectId || projectId === "undefined") {
-      return NextResponse.json({ error: "Invalid projectId" }, { status: 400 });
+    if (!projectId) {
+      return NextResponse.json(
+        { error: "Project ID is missing" },
+        { status: 400 }
+      );
     }
 
-    console.log("Fetching project:", { projectId, userId });
-
-    const project = await Project.findOne({ projectId, userId });
+    const [project] = await db
+      .select()
+      .from(projectsTable)
+      .where(
+        and(
+          eq(projectsTable.projectId, projectId),
+          eq(projectsTable.userId, userId)
+        )
+      );
 
     if (!project) {
       return NextResponse.json(
@@ -78,9 +41,56 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    return NextResponse.json(project, { status: 200 });
+    return NextResponse.json(project);
   } catch (error: any) {
-    console.error("Failed to fetch project:", error);
+    console.error("GET /api/project error:", error);
+    return NextResponse.json(
+      { error: error.message || "Internal Server Error" },
+      { status: 500 }
+    );
+  }
+}
+
+/* =======================
+   CREATE / UPDATE PROJECT
+======================= */
+export async function POST(req: NextRequest) {
+  try {
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { projectId, userInput, device } = await req.json();
+
+    if (!projectId || !userInput || !device) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const [project] = await db
+      .insert(projectsTable)
+      .values({
+        projectId,
+        userInput,
+        device,
+        userId,
+      })
+      .onConflictDoUpdate({
+        target: projectsTable.projectId,
+        set: {
+          userInput,
+          device,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+
+    return NextResponse.json(project, { status: 201 });
+  } catch (error: any) {
+    console.error("POST /api/project error:", error);
     return NextResponse.json(
       { error: error.message || "Internal Server Error" },
       { status: 500 }
