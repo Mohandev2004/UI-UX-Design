@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { useSearchParams } from "next/navigation";
+import axios, { CancelTokenSource } from "axios";
+import { useParams } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
 
 import ProjectHeader from "./_shared/ProjectHeader";
@@ -10,38 +10,49 @@ import SettingsSection from "./_shared/SettingsSection";
 import { ProjectType } from "@/type/types";
 
 export default function ProjectCanvasPlayground() {
-  const searchParams = useSearchParams();
-  const projectId = searchParams.get("projectId");
+  const { projectId } = useParams(); // from /project/[projectId] route
+  console.log("Project ID:", projectId);
 
   const [projectDetails, setProjectDetails] = useState<ProjectType | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!projectId) {
-      setErrorMsg("Project ID is missing");
-      setLoading(false);
-      return;
-    }
+    if (!projectId) return;
+
+    const cancelToken: CancelTokenSource = axios.CancelToken.source();
+
+    const fetchProject = async () => {
+      setLoading(true);
+      setErrorMsg(null);
+
+      try {
+        const { data } = await axios.get("/api/project", {
+          params: { projectId }, // ✅ send as query param
+          cancelToken: cancelToken.token,
+        });
+
+        if (!data) {
+          setErrorMsg("Project not found");
+          setProjectDetails(null);
+          return;
+        }
+
+        setProjectDetails(data);
+      } catch (err: any) {
+        if (axios.isCancel(err)) return;
+        setErrorMsg(
+          err?.response?.data?.error || err.message || "Failed to load project"
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchProject();
+
+    return () => cancelToken.cancel();
   }, [projectId]);
-
-  const fetchProject = async () => {
-    setLoading(true);
-    setErrorMsg(null);
-
-    try {
-      const { data } = await axios.get("/api/project", {
-        params: { projectId },
-      });
-      setProjectDetails(data);
-    } catch (err: any) {
-      console.error("Failed to load project", err);
-      setErrorMsg(err?.response?.data?.error || "Failed to load project");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="relative min-h-screen">
@@ -57,13 +68,15 @@ export default function ProjectCanvasPlayground() {
         </div>
       )}
 
-      {/* Error message */}
+      {/* Error */}
       {!loading && errorMsg && (
         <p className="text-center text-red-500 mt-10">{errorMsg}</p>
       )}
 
-      {/* Project content */}
-      {!loading && projectDetails && <SettingsSection />}
+      {/* Content */}
+      {!loading && projectDetails && (
+        <SettingsSection project={projectDetails} />
+      )}
     </div>
   );
 }
