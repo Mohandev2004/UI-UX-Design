@@ -93,4 +93,3 @@ export const screenConfigTable = pgTable("screen_config", {
     .defaultNow()
     .notNull(),
 });
-

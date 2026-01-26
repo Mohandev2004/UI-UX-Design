@@ -43,6 +43,8 @@ export default function SettingsSection({
     setUserNewScreenInput("");
   };
 
+  
+
   return (
     <div className="w-[300px] h-[90vh] p-5 flex flex-col gap-5 border-r">
       <h2 className="font-medium text-lg">Settings</h2>
