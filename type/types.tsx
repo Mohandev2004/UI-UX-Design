@@ -6,3 +6,14 @@ export type ProjectType = {
   projectName?: string;
   theme?: string; // corrected spelling and type
 }
+
+export type ScreenConfig ={
+  id: number,
+  screenId: string,
+  screenName: string,
+  purpose: string,
+  screenDescription: string,
+  code?: string 
+}
+
+

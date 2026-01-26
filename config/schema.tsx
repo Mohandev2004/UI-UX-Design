@@ -47,7 +47,9 @@ export const projectsTable = pgTable("projects", {
 
   device: text("device").notNull(),
 
-  userId: text("user_id").notNull(), // Clerk userId
+  userId: text("user_id").notNull(),
+
+  config: text("config"), // 👈 REQUIRED to stop data-loss warning
 
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -57,3 +59,38 @@ export const projectsTable = pgTable("projects", {
     .defaultNow()
     .notNull(),
 });
+
+
+/* =======================
+   SCREEN CONFIG TABLE
+======================= */
+export const screenConfigTable = pgTable("screen_config", {
+  id: integer("id")
+    .primaryKey()
+    .generatedAlwaysAsIdentity(),
+
+  projectId: text("project_id")
+    .notNull()
+    .references(() => projectsTable.projectId, { onDelete: "cascade" }),
+
+  screenId: varchar("screen_id", { length: 100 })  // ✅ change key to screenId
+    .notNull()
+    .unique(),
+
+  screenName: varchar("screen_name", { length: 255 }).notNull(),
+
+  purpose: varchar("purpose", { length: 255 }),
+
+  screenDescription: text("screen_description"),
+
+  code: text("code"),
+
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+
+  updatedAt: timestamp("updated_at", { withTimezone: true })  // ✅ add updatedAt
+    .defaultNow()
+    .notNull(),
+});
+
