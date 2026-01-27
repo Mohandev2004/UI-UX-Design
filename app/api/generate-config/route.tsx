@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { GoogleGenAI } from "@google/genai";
 import { APP_LAYOUT_CONFIG_PROMPT } from "@/app/data/Prompt";
+
+const ai = new GoogleGenAI({});
 
 export async function POST(req: NextRequest) {
   try {
@@ -12,55 +15,38 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const prompt = `
-${APP_LAYOUT_CONFIG_PROMPT}
+    const prompt =
+      APP_LAYOUT_CONFIG_PROMPT.replace("{deviceType}", deviceType) +
+      (existingScreens ? `\nEXISTING SCREENS:\n${JSON.stringify(existingScreens)}` : "") +
+      `\nUSER PROMPT:\n${userPrompt}`;
 
-DEVICE TYPE:
-${deviceType}
+    const response = await ai.models.generateContent({
+      model: "gemini-3-flash-preview",
+      contents: prompt,
+    });
 
-USER PROMPT:
-${userPrompt}
+    // ✅ Type-safe candidate
+    const candidate: unknown = response?.candidates?.[0]?.content;
 
-${existingScreens ? `EXISTING SCREENS:\n${JSON.stringify(existingScreens)}` : ""}
-`;
-
-    const response = await fetch(
-      "https://api-inference.huggingface.co/models/tiiuae/falcon-7b-instruct",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(process.env.HF_API_KEY && {
-            Authorization: `Bearer ${process.env.HF_API_KEY}`,
-          }),
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          parameters: {
-            max_new_tokens: 800,
-            temperature: 0.2,
-            return_full_text: false,
-          },
-        }),
-      }
-    );
-
-    const result = await response.json();
-    const rawText = result?.[0]?.generated_text;
-
-    if (!rawText) {
+    if (!candidate || typeof candidate !== "string") {
       return NextResponse.json(
-        { error: "Empty AI response", result },
+        { error: "AI returned empty or invalid response", response },
         { status: 500 }
       );
     }
 
+    // ✅ Now safe to trim
+    const cleaned: string = candidate.trim();
+
+    // Extract JSON block
     let parsedJson;
     try {
-      parsedJson = JSON.parse(rawText);
+      const match = cleaned.match(/\{[\s\S]*\}$/);
+      if (!match) throw new Error("No JSON block found");
+      parsedJson = JSON.parse(match[0]);
     } catch {
       return NextResponse.json(
-        { error: "Invalid JSON from AI", rawText },
+        { error: "Failed to parse JSON from AI", rawText: cleaned },
         { status: 500 }
       );
     }

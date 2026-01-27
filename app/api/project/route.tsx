@@ -61,12 +61,9 @@ export async function GET(req: NextRequest) {
 ======================= */
 export async function POST(req: NextRequest) {
   try {
-    
     const { userId } = await auth();
-
-    if (!userId) {
+    if (!userId)
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
 
     const { projectId, userInput, device } = await req.json();
 
@@ -74,7 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Insert or update project
+    // Insert or update project safely
     const [project] = await db
       .insert(projectsTable)
       .values({
@@ -82,9 +79,10 @@ export async function POST(req: NextRequest) {
         userInput,
         device,
         userId,
+        updatedAt: new Date(),
       })
       .onConflictDoUpdate({
-        target: projectsTable.projectId,
+        target: projectsTable.projectId, // requires UNIQUE constraint in DB
         set: {
           userInput,
           device,
@@ -94,7 +92,6 @@ export async function POST(req: NextRequest) {
       .returning();
 
     return NextResponse.json(project, { status: 201 });
-    
   } catch (error: any) {
     console.error("POST /api/project error:", error);
     return NextResponse.json(
@@ -103,3 +100,5 @@ export async function POST(req: NextRequest) {
     );
   }
 }
+
+
