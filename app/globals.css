@@ -91,47 +91,50 @@
 }
 
 .dark {
-  /* --- Nord Dark Base Palette --- */
-  --background: #2E3440;         /* Nord 0: Deep night blue-grey */
-  --foreground: #ECEFF4;         /* Nord 6: Snow Storm (Off-white) */
+  /* Core Background & Text */
+  --background: oklch(0 0 0);               /* Pure Black */
+  --foreground: oklch(0.95 0.01 200);      /* Clean Off-white */
 
-  /* Cards & Popovers - Using Nord 1 for slight lift */
-  --card: #3B4252;               /* Nord 1: Polar Night secondary */
-  --card-foreground: #ECEFF4;
-  --popover: #3B4252;
-  --popover-foreground: #ECEFF4;
+  /* Cards & Popovers - Slight elevation using dark grey */
+  --card: oklch(0.12 0 0);                 /* Deep Charcoal */
+  --card-foreground: oklch(0.95 0.01 200);
+  --popover: oklch(0.12 0 0);
+  --popover-foreground: oklch(0.95 0.01 200);
 
-  /* Primary Action - Using the classic Nord blue (frost) */
-  --primary: #88C0D0;            /* Nord 8: Frost Blue */
-  --primary-foreground: #2E3440;
+  /* Primary Action - Pure White for high contrast */
+  --primary: oklch(0.98 0 0);
+  --primary-foreground: oklch(0 0 0);
 
-  /* Secondary & Muted */
-  --secondary: #434C5E;          /* Nord 2: Slightly lighter frost-grey */
-  --secondary-foreground: #ECEFF4;
-  --muted: #4C566A;              /* Nord 3: Muted slate */
-  --muted-foreground: #D8DEE9;   /* Nord 4: Light grey text */
+  /* Secondary & Muted - Subtle grey for less important elements */
+  --secondary: oklch(0.18 0 0);
+  --secondary-foreground: oklch(0.95 0.01 200);
+  --muted: oklch(0.18 0 0);
+  --muted-foreground: oklch(0.65 0 0);     /* Soft Grey text */
 
   /* Accents & Borders */
-  --accent: #5E81AC;             /* Nord 10: Deep Frost blue for highlights */
-  --accent-foreground: #ECEFF4;
-  --destructive: #BF616A;        /* Nord 11: Aurora Red */
-  --border: #434C5E;             /* Clean Nord border */
-  --input: #3B4252;
-  --ring: #88C0D0;
+  --accent: oklch(0.25 0 0);               /* Lighter grey for hover states */
+  --accent-foreground: oklch(0.98 0 0);
+  --destructive: oklch(0.60 0.15 25);      /* Muted Red */
+  --border: oklch(1 0 0 / 12%);            /* Subtle glass-like border */
+  --input: oklch(1 0 0 / 8%);
+  --ring: oklch(0.95 0.01 200);
 
-  /* Sidebar - Darker than background for a sleek look */
-  --sidebar: #242933;            /* Custom Nord-style deep navy */
-  --sidebar-foreground: #ECEFF4;
-  --sidebar-primary: #88C0D0;
-  --sidebar-accent: #3B4252;
-  --sidebar-border: #1E222A;
+  /* Sidebar - Solid Black to match background */
+  --sidebar: oklch(0.08 0 0);              /* Just slightly off-black */
+  --sidebar-foreground: oklch(0.95 0.01 200);
+  --sidebar-primary: oklch(0.98 0 0);
+  --sidebar-primary-foreground: oklch(0 0 0);
+  --sidebar-accent: oklch(0.18 0 0);
+  --sidebar-accent-foreground: oklch(0.98 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.98 0 0);
 
-  /* Aurora Palette for Charts/Visuals */
-  --chart-1: #88C0D0;            /* Frost Blue */
-  --chart-2: #A3BE8C;            /* Aurora Green */
-  --chart-3: #EBCB8B;            /* Aurora Yellow */
-  --chart-4: #D08D70;            /* Aurora Orange */
-  --chart-5: #BF616A;            /* Aurora Red */
+  /* Charts - Monochrome scale */
+  --chart-1: oklch(0.98 0 0);              /* White */
+  --chart-2: oklch(0.75 0 0);              /* Light Grey */
+  --chart-3: oklch(0.55 0 0);              /* Medium Grey */
+  --chart-4: oklch(0.35 0 0);              /* Dark Grey */
+  --chart-5: oklch(0.20 0 0);              /* Deep Grey */
 }
 
 @layer base {
