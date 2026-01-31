@@ -17,7 +17,7 @@ function ProjectHeader() {
           <span className="text-primary">UIUX</span> Design
         </h2>
       </div>
-      <Button><Save/>Save</Button>
+      <Button className='cursor-pointer'><Save/>Save</Button>
     </div>
   )
 }
