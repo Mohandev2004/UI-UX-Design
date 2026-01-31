@@ -4,7 +4,6 @@ import React, { useState, useEffect } from "react";
 import { THEME_NAME_LIST, THEMES } from "@/app/data/Themes";
 import type { ThemeKey } from "@/app/data/Themes";
 import { ProjectType, ScreenConfig } from "@/type/types";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -70,7 +69,7 @@ export default function SettingsSection({
         />
         <Button
           size="sm"
-          className="mt-2 w-full gap-2"
+          className="mt-2 w-full gap-2 cursor-pointer"
           onClick={handleGenerate}
           disabled={loading}
         >
@@ -82,7 +81,7 @@ export default function SettingsSection({
       {/* Themes */}
       <div className="flex-1">
         <h2 className="text-sm mb-1">Themes</h2>
-        <div className="h-[200px] overflow-auto pr-1">
+        <div className="h-[200px] overflow-auto pr-1 scroll-smooth scrollbar-hide">
           {THEME_NAME_LIST.map((theme) => (
             <div
               key={theme}
@@ -119,11 +118,11 @@ export default function SettingsSection({
       <div>
         <h2 className="text-sm mb-1">Extras</h2>
         <div className="flex gap-3">
-          <Button size="sm" variant="outline" className="gap-2">
+          <Button size="sm" variant="outline" className="gap-2 cursor-pointer">
             <Camera size={16} />
             Screenshot
           </Button>
-          <Button size="sm" variant="outline" className="gap-2">
+          <Button size="sm" variant="outline" className="gap-2 cursor-pointer" >
             <Share size={16} />
             Share
           </Button>
