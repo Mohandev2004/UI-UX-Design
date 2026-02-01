@@ -3,8 +3,9 @@ export type ProjectType = {
   projectId: string;
   device: string;
   userInput: string;
+  createdOn: string;
   projectName?: string;
-  theme?: string; // corrected spelling and type
+  theme?: string; 
 }
 
 export type ScreenConfig ={

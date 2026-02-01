@@ -62,9 +62,8 @@ export default function Hero() {
   };
 
   return (
-    <section className="relative h-screen w-full overflow-hidden">
-      <BackgroundRippleEffect />
-
+    <section className="relative h-screen w-full overflow-hidden mt-2">
+{/* <BackgroundRippleEffect /> */}
       <div className="relative z-10 flex h-full w-full flex-col items-center justify-center px-6 overflow-hidden">
         <div className="flex w-full max-w-6xl flex-col items-center gap-8 text-center">
 
@@ -102,7 +101,7 @@ export default function Hero() {
               />
               <InputGroupAddon align="block-end">
                 <Select defaultValue="website" onValueChange={(Value) => setDevice(Value)}>
-                  <SelectTrigger className="w-[180px]">
+                  <SelectTrigger className="w-[180px] cursor-pointer">
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
                   <SelectContent>
@@ -110,9 +109,9 @@ export default function Hero() {
                     <SelectItem value="mobile">Mobile</SelectItem>
                   </SelectContent>
                 </Select>
-                <InputGroupButton className="ml-auto" size="sm" variant="default"
+                <InputGroupButton className="ml-auto cursor-pointer" size="sm" variant="default"
                   onClick={() => onCreateProject()}>
-                  <Send />
+                     <Send />
                 </InputGroupButton>
               </InputGroupAddon>
             </InputGroup>
@@ -121,7 +120,7 @@ export default function Hero() {
             {suggestions.map((suggestion, index) => (
               <div
                 key={index}
-                className="p-2.5 border rounded-2xl flex flex-col items-center bg-white dark:bg-neutral-800 z-10 max-w-[140px] text-center cursor-pointer"
+                className="p-2.5 border rounded-2xl flex flex-col items-center bg-white dark:bg-neutral-800 z-10 max-w-[140px] hover:border-white text-center cursor-pointer"
                 onClick={() => setUserInput(suggestion?.description)}
               >
                 <span className="text-lg">{suggestion?.icon}</span>
