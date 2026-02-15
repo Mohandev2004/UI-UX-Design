@@ -1,39 +1,26 @@
 "use client";
 
-import React from "react";
-import {
-  SandpackProvider,
-  SandpackPreview,
-} from "@codesandbox/sandpack-react";
-import { Loader2Icon, SmartphoneIcon } from "lucide-react";
+import React, { useEffect } from "react";
+import { Loader2Icon, MonitorIcon } from "lucide-react"; // Changed icon to monitor
 import { ScreenConfig } from "@/type/types";
 
 interface CanvasProps {
   loading: boolean;
   screenConfig: ScreenConfig[];
+  onGenerateCode: (screen: ScreenConfig, deviceType?: string) => Promise<void>;
 }
 
-function wrapHtmlAsReactApp(html: string) {
-  const safeHtml = html.replace(/`/g, "\\`");
+export default function Canvas({ loading, screenConfig, onGenerateCode }: CanvasProps) {
+  // Automatically generate all screens on mount for website
+  useEffect(() => {
+    if (screenConfig && screenConfig.length > 0) {
+      screenConfig.forEach(screen => {
+        if (!screen.code) onGenerateCode(screen, "website"); // Force deviceType as website
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [screenConfig]);
 
-  return `
-import React from "react";
-
-export default function App() {
-  return (
-    <div
-      style={{ width: "100%", height: "100%" }}
-      dangerouslySetInnerHTML={{
-        __html: \`${safeHtml}\`
-      }}
-    />
-  );
-}
-`;
-}
-
-export default function Canvas({ loading, screenConfig }: CanvasProps) {
-  // Initial loading state
   if (loading && screenConfig.length === 0) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center bg-gray-50 gap-4">
@@ -55,81 +42,40 @@ export default function Canvas({ loading, screenConfig }: CanvasProps) {
           >
             {/* Screen Label */}
             <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-200">
-              <SmartphoneIcon className="w-4 h-4 text-slate-500" />
+              <MonitorIcon className="w-4 h-4 text-slate-500" />
               <span className="text-sm font-semibold text-slate-700">
                 {screen.screenName || `Screen ${index + 1}`}
               </span>
             </div>
 
-            {/* Mobile Frame */}
+            {/* Website Frame */}
             <div
-              className="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.25)] rounded-[3rem] border-[12px] border-slate-950 overflow-hidden relative"
-              style={{ width: "320px", height: "640px" }}
+              className="bg-white shadow-[0_50px_100px_-20px_rgba(0,0,0,0.25)] rounded-xl border border-slate-950 overflow-hidden relative"
+              style={{ width: "1024px", height: "600px" }} // Website frame size
             >
-              {/* iPhone Notch */}
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-slate-950 rounded-b-2xl z-20" />
-
               {/* LIVE PREVIEW */}
               {screen.code ? (
-                <SandpackProvider
-                  template="react"
-                  theme="light"
-                  files={{
-                    "/App.js": wrapHtmlAsReactApp(screen.code),
-                    "/styles.css": `
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-:root {
-  --background: 0 0% 100%;
-  --foreground: 222 47% 11%;
-  --card: 0 0% 98%;
-  --border: 220 13% 91%;
-  --primary: 262 83% 58%;
-  --muted-foreground: 215 16% 47%;
-}
-
-html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-}
-                    `,
-                  }}
-                  customSetup={{
-                    dependencies: {
-                      react: "latest",
-                      "react-dom": "latest",
-                      "lucide-react": "latest",
-                      "clsx": "latest",
-                      "tailwind-merge": "latest",
-                      "framer-motion": "latest",
-                    },
-                  }}
-                >
-                  <SandpackPreview
-                    style={{ height: "640px" }}
-                    showNavigator={false}
-                    showRefreshButton={false}
-                  />
-                </SandpackProvider>
+                <iframe
+                  className="w-full h-full"
+                  sandbox="allow-scripts allow-same-origin"
+                  srcDoc={`<!DOCTYPE html>
+                    <html>
+                      <head>
+                        <script src="https://cdn.tailwindcss.com"></script>
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                        <style>
+                          body { margin:0; padding:0; font-family:ui-sans-serif, system-ui; }
+                        </style>
+                      </head>
+                      <body>${screen.code}</body>
+                    </html>`}
+                />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-slate-50">
-                  <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-4">
-                    <Loader2Icon className="w-6 h-6 text-slate-300 animate-spin" />
-                  </div>
-                  <p className="text-slate-400 text-sm italic">
-                    Waiting for AI to generate code...
-                  </p>
+                <div className="flex flex-col items-center justify-center h-full p-6 text-center bg-slate-50 gap-4">
+                  <Loader2Icon className="animate-spin w-6 h-6 text-blue-500" />
+                  <p className="text-slate-400 text-xs mt-1 px-4">Generating UI for website...</p>
                 </div>
               )}
-
-              {/* Home Indicator */}
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 w-28 h-1 bg-slate-900/20 rounded-full z-20" />
             </div>
           </div>
         ))}
@@ -137,13 +83,8 @@ html, body {
         {/* Empty State */}
         {screenConfig.length === 0 && !loading && (
           <div className="flex flex-col items-center justify-center mt-20 opacity-40">
-            <SmartphoneIcon className="w-16 h-16 mb-4 text-slate-300" />
-            <p className="text-slate-500 font-medium">
-              No screens generated yet.
-            </p>
-            <p className="text-sm text-slate-400">
-              Use the sidebar to describe your app.
-            </p>
+            <MonitorIcon className="w-16 h-16 mb-4 text-slate-300" />
+            <p className="text-slate-500 font-medium">No screens found.</p>
           </div>
         )}
       </div>

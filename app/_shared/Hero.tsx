@@ -20,10 +20,8 @@ import { cn } from "@/lib/utils";
 import { AnimatedShinyText } from "@/components/ui/animated-shiny-text";
 import { suggestions } from "../data/suggestions";
 import { useState } from "react";
-import { Value } from "@radix-ui/react-select";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
-import { set } from "mongoose";
 import axios from "axios";
 
 export default function Hero() {

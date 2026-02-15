@@ -2,59 +2,71 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenAI } from "@google/genai";
 import { APP_LAYOUT_CONFIG_PROMPT } from "@/app/data/Prompt";
 
-const ai = new GoogleGenAI({});
-
 export async function POST(req: NextRequest) {
   try {
-    const { deviceType, userPrompt, existingScreens } = await req.json();
+    // 1️⃣ Check API Key
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      console.error("❌ API CRASHED: GEMINI_API_KEY is missing in .env.local");
+      return NextResponse.json(
+        { error: "Server configuration error (API Key)" },
+        { status: 500 }
+      );
+    }
 
+    const ai = new GoogleGenAI({ apiKey });
+
+    const body = await req.json();
+    const { deviceType, userPrompt } = body;
+
+    // 2️⃣ Validate input
     if (!deviceType || !userPrompt) {
       return NextResponse.json(
-        { error: "deviceType and userPrompt are required" },
+        { error: "Missing deviceType or userPrompt" },
         { status: 400 }
       );
     }
 
-    const prompt =
-      APP_LAYOUT_CONFIG_PROMPT.replace("{deviceType}", deviceType) +
-      (existingScreens ? `\nEXISTING SCREENS:\n${JSON.stringify(existingScreens)}` : "") +
-      `\nUSER PROMPT:\n${userPrompt}`;
+    console.log("🔵 Request received for:", deviceType);
 
+    const prompt =
+      (APP_LAYOUT_CONFIG_PROMPT || "Generate layout for {deviceType}")
+        .replace("{deviceType}", deviceType) +
+      `\nUSER PROMPT: ${userPrompt}`;
+
+    // 🔥 Gemini 3 Flash Preview
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
-      contents: prompt,
+      contents: [
+        {
+          role: "user",
+          parts: [{ text: prompt }],
+        },
+      ],
     });
 
-    // ✅ Type-safe candidate
-    const candidate: unknown = response?.candidates?.[0]?.content;
+    const text = response.text || "";
 
-    if (!candidate || typeof candidate !== "string") {
+    console.log("🤖 AI Response Text:", text);
+
+    // 🛠️ STRONGER CLEANING LOGIC
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+
+    if (!jsonMatch) {
+      console.error("❌ AI failed to return JSON. Raw text:", text);
       return NextResponse.json(
-        { error: "AI returned empty or invalid response", response },
+        { error: "AI returned non-JSON text" },
         { status: 500 }
       );
     }
 
-    // ✅ Now safe to trim
-    const cleaned: string = candidate.trim();
+    const parsedData = JSON.parse(jsonMatch[0]);
+    return NextResponse.json(parsedData);
 
-    // Extract JSON block
-    let parsedJson;
-    try {
-      const match = cleaned.match(/\{[\s\S]*\}$/);
-      if (!match) throw new Error("No JSON block found");
-      parsedJson = JSON.parse(match[0]);
-    } catch {
-      return NextResponse.json(
-        { error: "Failed to parse JSON from AI", rawText: cleaned },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json(parsedJson);
   } catch (err: any) {
+    console.error("❌ API CRASHED:", err);
     return NextResponse.json(
-      { error: err.message || "Server error" },
+      { error: err.message || "Internal Server Error" },
       { status: 500 }
     );
   }

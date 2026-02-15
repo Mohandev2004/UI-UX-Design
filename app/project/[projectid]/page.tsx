@@ -1,10 +1,8 @@
 "use client";
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useParams } from "next/navigation";
 import { Loader2Icon } from "lucide-react";
-
 import ProjectHeader from "./_shared/ProjectHeader";
 import SettingsSection from "./_shared/SettingsSection";
 import Canvas from "./_shared/Canvas";
@@ -12,122 +10,81 @@ import { ProjectType, ScreenConfig } from "@/type/types";
 
 export default function ProjectCanvasPlayground() {
   const { projectId } = useParams<{ projectId: string }>();
-
   const [projectDetails, setProjectDetails] = useState<ProjectType | null>(null);
   const [screenConfig, setScreenConfig] = useState<ScreenConfig[]>([]);
   const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // -----------------------------
-  // Generate Screen Config
-  // -----------------------------
-  const generateLayoutWithAI = async (prompt: string) => {
+  // Helper to handle Fetch and check for HTML-instead-of-JSON errors
+  const safeFetch = async (url: string, options: any) => {
+    const res = await fetch(url, options);
+    const contentType = res.headers.get("content-type");
+    if (!contentType || !contentType.includes("application/json")) {
+      console.error(`❌ Route ${url} returned HTML. Check your folder structure!`);
+      throw new Error("API Route Not Found (404)");
+    }
+    return res.json();
+  };
+
+  const generateScreenCode = async (screen: ScreenConfig) => {
+    setLoading(true);
     try {
-      const res = await fetch("/api/layout-config", {
+      const data = await safeFetch("/api/generate-screen-ui", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          deviceType: "Mobile",
-          userPrompt: prompt,
-          existingScreens: screenConfig,
+          projectId,
+          screenId: screen.screenId,
+          screenName: screen.screenName,
+          purpose: screen.purpose,
+          screenDescription: screen.screenDescription,
+          deviceType: projectDetails?.device || "website",
         }),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "AI failed");
-
-      setProjectDetails((prev) =>
-        prev ? { ...prev, projectName: data.projectName || prev.projectName } : prev
+      setScreenConfig((prev) =>
+        prev.map((s) => (s.screenId === screen.screenId ? { ...s, code: data.html } : s))
       );
-
-      setScreenConfig(data.screens || []);
-    } catch (err) {
-      console.error("AI generation error:", err);
-      alert("Failed to generate layout.");
-    }
+    } catch (err: any) {
+      alert(err.message);
+    } finally { setLoading(false); }
   };
 
-  // -----------------------------
-  // Fetch Project
-  // -----------------------------
+  const generateLayoutWithAI = async (prompt: string) => {
+    setLoading(true);
+    try {
+      const data = await safeFetch("/api/generate-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          deviceType: projectDetails?.device || "website",
+          userPrompt: prompt,
+        }),
+      });
+      setScreenConfig(data.screens || []);
+    } catch (err: any) {
+      alert("Layout generation failed. Check console.");
+    } finally { setLoading(false); }
+  };
+
   useEffect(() => {
     if (!projectId) return;
-    const controller = new AbortController();
-
-    const fetchProject = async () => {
-      setLoading(true);
-      setErrorMsg(null);
-      try {
-        const { data } = await axios.get("/api/project", {
-          params: { projectId },
-          signal: controller.signal,
-        });
-
-        if (!data?.projectDetail) {
-          setErrorMsg("Project not found");
-          return;
-        }
-
-        setProjectDetails(data.projectDetail);
-        setScreenConfig(data.screenConfig ?? []);
-
-      } catch (err: any) {
-        if (err.name === "CanceledError") return;
-        setErrorMsg(err?.response?.data?.error || err.message || "Failed to load project");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProject();
-    return () => controller.abort();
+    axios.get("/api/project", { params: { projectId } })
+      .then(res => {
+        setProjectDetails(res.data.projectDetail);
+        setScreenConfig(res.data.screenConfig ?? []);
+      })
+      .finally(() => setLoading(false));
   }, [projectId]);
 
-  // -----------------------------
-  // Render
-  // -----------------------------
   return (
-    <div className="relative min-h-screen flex flex-col overflow-hidden">
+    <div className="relative min-h-screen flex flex-col">
       <ProjectHeader />
-
-      <div className="flex flex-1 h-[calc(100vh-64px)] overflow-hidden">
-        
-        {/* Loader Overlay */}
-        {loading && (
-          <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60 backdrop-blur-sm">
-            <div className="bg-white border border-slate-200 shadow-xl rounded-2xl px-6 py-4 flex items-center gap-3">
-              <Loader2Icon className="animate-spin text-primary" />
-              <span className="font-medium text-slate-700">Syncing Workspace...</span>
-            </div>
-          </div>
-        )}
-
-        {/* Error State */}
-        {!loading && errorMsg && (
-          <div className="flex-1 flex flex-col items-center justify-center bg-slate-50">
-            <p className="text-red-500 font-semibold mb-4">{errorMsg}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm"
-            >
-              Retry
-            </button>
-          </div>
-        )}
-
-        {/* Sidebar and Canvas */}
-        {!loading && projectDetails && (
+      <div className="flex flex-1 h-[calc(100vh-64px)]">
+        {loading && <div className="absolute inset-0 z-50 flex items-center justify-center bg-white/60"><Loader2Icon className="animate-spin" /></div>}
+        {projectDetails && (
           <>
-            <SettingsSection
-              project={projectDetails}
-              screenConfig={screenConfig}
-              onGenerateLayout={generateLayoutWithAI}
-            />
-
-            <Canvas 
-              loading={loading} 
-              screenConfig={screenConfig} 
-            />
+            <SettingsSection project={projectDetails} screenConfig={screenConfig} onGenerateLayout={generateLayoutWithAI} />
+            <Canvas loading={loading} screenConfig={screenConfig} onGenerateCode={generateScreenCode} />
           </>
         )}
       </div>
